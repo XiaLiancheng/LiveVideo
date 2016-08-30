@@ -20,7 +20,11 @@
 
 @end
 
-@implementation ZhuBoViewController
+@implementation ZhuBoViewController{
+    
+    AVCaptureConnection *_videoConnection;//输入输出建立连接
+    AVCaptureConnection *_audioConnection;
+}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -50,6 +54,24 @@
     dispatch_queue_t queue = dispatch_queue_create("myQueue", NULL);
     [output setSampleBufferDelegate:self queue:queue];
     
+    output.videoSettings = [NSDictionary dictionaryWithObject:[NSNumber numberWithInt:kCVPixelFormatType_420YpCbCr8BiPlanarFullRange] forKey:(NSString *)kCVPixelBufferPixelFormatTypeKey];
+    output.alwaysDiscardsLateVideoFrames = YES;
+    
+    [self startRuning];
+    //添加输出设备
+    if ([self.session canAddOutput:output]) {
+        [self.session addOutput:output];
+    }
+    
+    //创建浏览层,用于展示
+    self.previewLayer = [[AVCaptureVideoPreviewLayer alloc] initWithSession:self.session];
+    self.previewLayer.frame = CGRectMake(0, 0, WIDTH, 500);
+    self.previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;//填充模式
+    [self.view.layer addSublayer:self.previewLayer];
+    
+    //
+    _videoConnection = [output connectionWithMediaType:AVMediaTypeVideo];
+
 
 }
 
@@ -62,6 +84,11 @@
         }
     }
     return nil;
+}
+
+-(void)startRuning{
+    
+    [self.session startRunning];
 }
 
 - (void)didReceiveMemoryWarning {
